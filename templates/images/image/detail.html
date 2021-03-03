@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load thumbnail static utils %}
+
+{% block title %}{{ image.title }}{% endblock %}
+{% block scripts %}
+  {{ block.super }}
+  <script src="{% static 'js/like.js'%}" type="text/javascript"></script>
+  {% abs_url "images:like" as like_url %}
+  {{ like_url|json_script:"like_url" }}
+
+{% endblock %}
+
+{% block content %}
+  <h1>{{ image.title }}</h1>
+
+  <a href="{{ image.image.url }}">
+    <picture>
+      {% thumbnail image.image 300x0 as thumb %}
+      <source srcset="{{ thumb.url }}.webp" type="image/webp" />
+      <img src="{{ thumb.url }}" width="{{ thumb.width }}" height="{{ thumb.height }}" class="image-detail" />
+    </picture>
+  <a>
+  {% with total_likes=image.users_like.count users_like=image.users_like.all %}
+    <div class="image-info">
+      <div>
+        <span class="count">
+          <span class="total">{{total_likes}}</span>
+          {{ total_likes }} like{{ total_likes|pluralize }}
+        </span>
+        <a href="#" data-id="{{image.id}}" data-action="{% if request.user in users_like %}un{%endif%}like" class="like button">
+          {% if request.user not in users_like %}
+            Like
+          {%else%}
+            Unlike
+          {%endif%}
+        </a>
+      </div>
+      {{ image.description|linebreaks }}
+    </div>
+    <div class="image-likes">
+      {% for user in image.users_like.all %}
+        <div>
+          <img src="{{ user.profile.photo.url }}" alt="{{ user.first_name }}">
+          <p>{{ user.first_name }}</p>
+        </div>
+        {% empty %}
+          Nobody likes this image yet.
+        {% endfor %}
+    </div>
+  {% endwith %}
+{% endblock %}
